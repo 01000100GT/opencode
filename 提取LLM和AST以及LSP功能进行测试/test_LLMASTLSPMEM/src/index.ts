@@ -234,7 +234,10 @@ export class Application {
   }
 
   // LLM 功能
-  async chat(message: string, systemPrompt?: string): Promise<CompletionResponse> {
+  async chat(
+    message: string,
+    options?: { systemPrompt?: string; tools?: ToolDefinition[] }
+  ): Promise<CompletionResponse> {
     this.logger.info("Chatting with LLM", { message: message.substring(0, 50) })
 
     // 获取上下文窗口
@@ -245,7 +248,17 @@ export class Application {
       ? `Context:\n${contextContent}\n\nUser: ${message}`
       : message
 
-    const response = await this.llm.chat(enhancedPrompt, systemPrompt)
+    // 如果有工具，注册临时工具
+    if (options?.tools) {
+      for (const tool of options.tools) {
+        this.llm.registerTool(tool, {
+          name: tool.name,
+          execute: async () => ({ status: "registered" }),
+        })
+      }
+    }
+
+    const response = await this.llm.chat(enhancedPrompt, options?.systemPrompt)
 
     // 保存对话到记忆
     await this.memory.create("conversation", message, {

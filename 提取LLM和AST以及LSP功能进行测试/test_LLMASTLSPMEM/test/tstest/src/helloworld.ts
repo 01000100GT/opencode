@@ -4,7 +4,7 @@
  */
 
 import type { User, Order, OrderItem } from "./types"
-import { createUser, updateUser, getUserById, deleteUser, listUsers } from "./user-service"
+import { getUserById, deleteUser, listUsers } from "./user-service"
 import {
   createOrder,
   updateOrderStatus,
@@ -34,7 +34,7 @@ export async function processUserRegistrationWithFirstOrder(
   }
 
   // 步骤2：创建用户
-  const user = await creaateUser(userName, userEmail, "user")
+  const user = await createUser(userName, userEmail, "user")
   console.log(`[Process] User created: ${user.id}`)
 
   // 步骤3：创建首单

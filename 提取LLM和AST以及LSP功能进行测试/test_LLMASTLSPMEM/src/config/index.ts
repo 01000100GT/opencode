@@ -32,6 +32,7 @@ function loadFromEnv(): Partial<AppConfig> {
       baseUrl: process.env.LLM_BASE_URL,
       temperature: parseFloat(process.env.LLM_TEMPERATURE || "0.7"),
       maxTokens: parseInt(process.env.LLM_MAX_TOKENS || "2000"),
+      // 超时时间，单位毫秒
       timeout: parseInt(process.env.LLM_TIMEOUT || "30000"),
     }
   }
