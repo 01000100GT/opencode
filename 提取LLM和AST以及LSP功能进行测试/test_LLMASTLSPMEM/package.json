@@ -1,0 +1,30 @@
+{
+  "name": "llm-ast-lsp-mem",
+  "version": "1.0.0",
+  "description": "LLM, AST, LSP and Memory Framework - Hexagonal Architecture Demo",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "bun run src/tests/test-runner.ts",
+    "dev": "bun run --watch src/tests/test-runner.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "llm",
+    "ast",
+    "lsp",
+    "memory",
+    "hexagonal-architecture",
+    "solid"
+  ],
+  "author": "Architecture Design Expert Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}
