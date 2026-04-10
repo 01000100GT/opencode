@@ -92,30 +92,45 @@ export class OpenAIProvider implements LLMProvider {
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     const body = this.buildRequestBody(request)
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    })
+    // 创建 AbortController 用于超时控制
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`OpenAI API error: ${response.status} ${error}`)
-    }
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      })
 
-    const data = await response.json() as OpenAIChatCompletion
+      clearTimeout(timeoutId)
 
-    return {
-      content: data.choices[0]?.message?.content || "",
-      toolCalls: this.parseToolCalls(data.choices[0]?.message?.tool_calls),
-      usage: data.usage ? {
-        promptTokens: data.usage.prompt_tokens,
-        completionTokens: data.usage.completion_tokens,
-        totalTokens: data.usage.total_tokens,
-      } : undefined,
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`OpenAI API error: ${response.status} ${error}`)
+      }
+
+      const data = await response.json() as OpenAIChatCompletion
+
+      return {
+        content: data.choices[0]?.message?.content || "",
+        toolCalls: this.parseToolCalls(data.choices[0]?.message?.tool_calls),
+        usage: data.usage ? {
+          promptTokens: data.usage.prompt_tokens,
+          completionTokens: data.usage.completion_tokens,
+          totalTokens: data.usage.total_tokens,
+        } : undefined,
+      }
+    } catch (err) {
+      clearTimeout(timeoutId)
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new Error(`LLM request timeout after ${this.timeout}ms`)
+      }
+      throw err
     }
   }
 
