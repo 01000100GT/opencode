@@ -11,6 +11,7 @@ import {
   MockASTParser,
   MockLSPClient,
   MockLLMProvider,
+  OpenAIProvider,
   InMemoryStorage,
   SimpleTokenizer,
 } from "./adapters"
@@ -78,6 +79,28 @@ class SimpleFileSystem {
   }
 }
 
+// 加载 .env 文件到 process.env
+async function loadEnvFile(): Promise<void> {
+  try {
+    const envFile = Bun.file(".env")
+    if (await envFile.exists()) {
+      const content = await envFile.text()
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith("#")) continue
+        const eqIndex = trimmed.indexOf("=")
+        if (eqIndex > 0) {
+          const key = trimmed.substring(0, eqIndex)
+          const value = trimmed.substring(eqIndex + 1).replace(/^["']|["']$/g, "")
+          process.env[key] = value
+        }
+      }
+    }
+  } catch {
+    // .env 文件不存在或读取失败，忽略
+  }
+}
+
 export class Application {
   public ast!: ASTService
   public lsp!: LSPService
@@ -97,7 +120,14 @@ export class Application {
   }
 
   async initialize(): Promise<void> {
+    // 首先加载 .env 文件
+    await loadEnvFile()
+
+    // 重新加载配置（现在包含了 .env 中的环境变量）
+    this.config = loadConfig()
+
     this.logger.info("Initializing Application...")
+    this.logger.info("LLM Config", { model: this.config.llm.model, baseUrl: this.config.llm.baseUrl })
 
     // 初始化 AST 服务
     const astParser = new MockASTParser()
@@ -118,9 +148,19 @@ export class Application {
     this.logger.info("Memory Service initialized")
 
     // 初始化 LLM 服务
-    const llmProvider = new MockLLMProvider()
+    const llmProvider = this.config.llm.apiKey
+      ? new OpenAIProvider({
+          apiKey: this.config.llm.apiKey,
+          baseUrl: this.config.llm.baseUrl,
+          model: this.config.llm.model,
+          temperature: this.config.llm.temperature,
+          maxTokens: this.config.llm.maxTokens,
+          timeout: this.config.llm.timeout,
+        })
+      : new MockLLMProvider()
+
     this.llm = new LLMService(llmProvider, this.contextProvider, this.config.llm)
-    this.logger.info("LLM Service initialized")
+    this.logger.info("LLM Service initialized", { provider: this.config.llm.apiKey ? "OpenAI" : "Mock" })
 
     this.logger.info("Application initialized successfully")
   }

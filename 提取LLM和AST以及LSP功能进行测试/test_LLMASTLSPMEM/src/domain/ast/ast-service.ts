@@ -163,7 +163,8 @@ export class ASTService {
   private async argPath(arg: string, cwd: string, ps: boolean): Promise<string | null> {
     const cleaned = arg.replace(/^["']|["']$/g, "")
     if (cleaned.startsWith("/") || cleaned.startsWith("~") || /^[a-zA-Z]:/.test(cleaned)) {
-      return this.fs.normalize(cleaned.replace(/^~/, process.env.HOME || ""))
+      const home = typeof process !== "undefined" ? process.env.HOME : ""
+      return this.fs.normalize(cleaned.replace(/^~/, home || ""))
     }
     return this.fs.resolve(cwd, cleaned)
   }
