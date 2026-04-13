@@ -11,6 +11,7 @@
   ],
   "settings": {
     "typescript.tsdk": "node_modules/typescript/lib",
+    "cSpell.words": ["opencode", "opencode's", "oh-my-opencode"],
     "files.exclude": {
       "**/node_modules": true,
       "**/dist": true,
@@ -20,71 +21,45 @@
       "**/node_modules": true,
       "**/dist": true,
       "**/bun.lockb": true
-    },
-    "debug.javascript.autoAttachFilter": "always"
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Build oh-my-opencode",
+        "type": "shell",
+        "command": "bun",
+        "args": ["run", "build"],
+        "options": {
+          "cwd": "${workspaceFolder:oh-my-opencode (Plugin)}"
+        },
+        "problemMatcher": ["$tsc"],
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared",
+          "clear": true
+        }
+      }
+    ]
   },
   "launch": {
     "version": "0.2.0",
     "configurations": [
       {
+        "type": "bun",
+        "request": "launch",
         "name": "OpenCode + Plugin (联调)",
-        "type": "node",
-        "request": "launch",
-        "runtimeExecutable": "bun",
+        "runtime": "bun",
         "runtimeArgs": [
-          "--inspect-wait=9229",
+          "--inspect-wait",
           "run",
-          "--conditions=browser",
-          "src/index.ts"
+          "--conditions=browser"
         ],
+        "program": "src/index.ts",
+        "args": ["run", "你好"],
         "cwd": "${workspaceFolder:OpenCode (Host)}/packages/opencode",
-        "console": "integratedTerminal",
-        "sourceMaps": true,
-        "resolveSourceMapLocations": [
-          "${workspaceFolder:OpenCode (Host)}/**",
-          "${workspaceFolder:oh-my-opencode (Plugin)}/src/**"
-        ],
-        "outFiles": [
-          "${workspaceFolder:OpenCode (Host)}/packages/opencode/**/*.js",
-          "${workspaceFolder:oh-my-opencode (Plugin)}/dist/**/*.js"
-        ],
-        "skipFiles": ["<node_internals>/**"],
-        "env": {
-          "OPENCODE_CLI_RUN_MODE": "true"
-        }
-      },
-      {
-        "name": "Attach to running OpenCode",
-        "type": "node",
-        "request": "attach",
-        "port": 9229,
-        "sourceMaps": true,
-        "resolveSourceMapLocations": [
-          "${workspaceFolder:OpenCode (Host)}/**",
-          "${workspaceFolder:oh-my-opencode (Plugin)}/src/**"
-        ],
-        "outFiles": [
-          "${workspaceFolder:OpenCode (Host)}/packages/opencode/**/*.js",
-          "${workspaceFolder:oh-my-opencode (Plugin)}/dist/**/*.js"
-        ],
-        "skipFiles": ["<node_internals>/**"]
-      },
-      {
-        "name": "PreLaunch: Build Plugin",
-        "type": "node",
-        "request": "launch",
-        "runtimeExecutable": "bun",
-        "runtimeArgs": ["run", "build"],
-        "cwd": "${workspaceFolder:oh-my-opencode (Plugin)}",
-        "console": "integratedTerminal"
-      }
-    ],
-    "compounds": [
-      {
-        "name": "Build Plugin + Launch OpenCode (一键联调)",
-        "configurations": ["PreLaunch: Build Plugin", "OpenCode + Plugin (联调)"],
-        "preLaunchTask": "Build Plugin",
-        "stopAll": true
+        "stopOnEntry": false
       }
     ]
   }
